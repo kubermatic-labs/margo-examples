@@ -1,0 +1,24 @@
+# Set by the Margo parameters greeting and greetingAddressee, see package/margo.yaml.
+global:
+  config:
+    appGreeting: Hello
+    appGreetingAddressee: World
+
+image:
+  repository: quay.io/kubermatic-labs/margo-examples/hello-world
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi

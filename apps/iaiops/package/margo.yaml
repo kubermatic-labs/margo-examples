@@ -1,0 +1,150 @@
+apiVersion: v1
+id: com-kubermatic-examples-iaiops
+metadata:
+  name: Industrial-AIOps
+  description: >-
+    Vendor-neutral, read-first OT data tap with a cross-protocol root-cause brain, exposed as
+    governed MCP tools. This example package runs it as a Helm deployment and adds a simulated
+    production line, so an AI assistant can compute the line's OEE right away.
+  version: "0.28.0"
+  catalog:
+    application:
+      icon: ./resources/iaiops.png
+      tagline: OT data and OEE as MCP tools for AI assistants, with a simulated line to read.
+      descriptionFile: ./resources/description.md
+      releaseNotes: ./resources/release-notes.md
+      licenseFile: ./resources/license.md
+      site: https://github.com/industrial-aiops/industrial-aiops
+      tags: ["ot", "iiot", "oee", "mcp", "ai"]
+    organization:
+      - name: Kubermatic
+        site: https://www.kubermatic.com
+deploymentProfiles:
+  - type: helm
+    id: com-kubermatic-examples-iaiops-helm
+    description: >-
+      The line simulator first, then iaiops as a non-root, read-only container with its MCP server
+      on port 8000 behind an IP allowlist.
+    components:
+      - name: line-simulator
+        properties:
+          repository: oci://quay.io/kubermatic-labs/margo-examples/charts/oee-line-simulator
+          revision: 0.1.0
+          wait: true
+      - name: iaiops
+        properties:
+          repository: oci://quay.io/kubermatic-labs/margo-examples/charts/iaiops
+          revision: 0.1.0
+          wait: true
+          timeout: 5m0s
+    deviceConstraints:
+      capacityRequirements:
+        cpu:
+          cores: 0.5
+          architectures: ["amd64", "arm64"]
+        memory: 768Mi
+        storage: 2Gi
+parameters:
+  profile:
+    value: factory
+    targets:
+      - pointer: profile
+        components: ["iaiops"]
+  allowlistIps:
+    value: 127.0.0.1/32
+    targets:
+      - pointer: mcp.allowlist
+        components: ["iaiops"]
+  modbusHost:
+    value: line-simulator
+    targets:
+      - pointer: modbus.host
+        components: ["iaiops"]
+  modbusPort:
+    value: 5020
+    targets:
+      - pointer: modbus.port
+        components: ["iaiops"]
+  idealCycleTime:
+    value: 0.1
+    targets:
+      - pointer: modbus.idealCycleTimeSeconds
+        components: ["iaiops"]
+  lineSimulator:
+    value: true
+    targets:
+      - pointer: enabled
+        components: ["line-simulator"]
+  shiftSeconds:
+    value: 300
+    targets:
+      - pointer: shiftSeconds
+        components: ["line-simulator"]
+configuration:
+  sections:
+    - name: MCP server
+      settings:
+        - parameter: profile
+          name: Edition
+          description: The iaiops edition, which selects the image and the MCP tools it offers.
+          schema: edition
+        - parameter: allowlistIps
+          name: Allowed client networks
+          description: Comma-separated CIDRs that may call the MCP tools. kubectl port-forward connects from 127.0.0.1/32.
+          schema: cidrList
+    - name: Production line
+      settings:
+        - parameter: modbusHost
+          name: Modbus host
+          description: The Modbus TCP device read as line1. The default is the package's line simulator.
+          schema: host
+        - parameter: modbusPort
+          name: Modbus port
+          description: TCP port of the Modbus device. The simulator listens on 5020.
+          schema: port
+        - parameter: idealCycleTime
+          name: Ideal cycle time
+          description: Seconds per part at full speed, the base of the OEE Performance factor.
+          schema: cycleTime
+    - name: Line simulator
+      settings:
+        - parameter: lineSimulator
+          name: Run the line simulator
+          description: Deploy the simulated line. Disable it when line1 is a real device.
+          schema: flag
+        - parameter: shiftSeconds
+          name: Shift length
+          description: Seconds of one simulated shift, which the simulator replays forever.
+          schema: shift
+  schema:
+    - name: edition
+      dataType: string
+      allowEmpty: false
+      options: ["factory", "fab", "process", "building", "water"]
+    - name: cidrList
+      dataType: string
+      allowEmpty: false
+      maxLength: 512
+      regexMatch: ^[0-9a-fA-F:.]+/[0-9]{1,3}(,[0-9a-fA-F:.]+/[0-9]{1,3})*$
+    - name: host
+      dataType: string
+      allowEmpty: false
+      maxLength: 253
+      regexMatch: ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$
+    - name: port
+      dataType: integer
+      allowEmpty: false
+      minValue: 1
+      maxValue: 65535
+    - name: cycleTime
+      dataType: double
+      allowEmpty: false
+      minValue: 0.001
+      maxValue: 3600
+    - name: flag
+      dataType: boolean
+    - name: shift
+      dataType: integer
+      allowEmpty: false
+      minValue: 60
+      maxValue: 86400

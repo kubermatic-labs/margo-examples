@@ -1,0 +1,11 @@
+{{- if .Values.exampleFlow }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "node-red.fullname" . }}-example-flow
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+data:
+  flows.json: |
+    {{- .Files.Get "files/flows.json" | nindent 4 }}
+{{- end }}

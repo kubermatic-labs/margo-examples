@@ -1,0 +1,129 @@
+[
+    {
+        "id": "6d617267f0000001",
+        "type": "tab",
+        "label": "Margo edge demo",
+        "disabled": false,
+        "info": "Seeded by the Margo example package node-red. The heartbeat and GET /hello name the node this flow runs on."
+    },
+    {
+        "id": "6d617267f0000002",
+        "type": "comment",
+        "z": "6d617267f0000001",
+        "name": "Heartbeat every 10 s, and GET /hello answers with the node name",
+        "info": "NODE_NAME and POD_NAME come from the pod's environment, set by the chart.",
+        "x": 300,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "6d617267f0000003",
+        "type": "inject",
+        "z": "6d617267f0000001",
+        "name": "every 10 s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 120,
+        "wires": [
+            [
+                "6d617267f0000004"
+            ]
+        ]
+    },
+    {
+        "id": "6d617267f0000004",
+        "type": "function",
+        "z": "6d617267f0000001",
+        "name": "where am I",
+        "func": "msg.payload = {\n    node: env.get(\"NODE_NAME\"),\n    pod: env.get(\"POD_NAME\"),\n    time: new Date(msg.payload).toISOString()\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 120,
+        "wires": [
+            [
+                "6d617267f0000005"
+            ]
+        ]
+    },
+    {
+        "id": "6d617267f0000005",
+        "type": "debug",
+        "z": "6d617267f0000001",
+        "name": "heartbeat",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload.node",
+        "statusType": "msg",
+        "x": 540,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "6d617267f0000006",
+        "type": "http in",
+        "z": "6d617267f0000001",
+        "name": "GET /hello",
+        "url": "/hello",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            [
+                "6d617267f0000007"
+            ]
+        ]
+    },
+    {
+        "id": "6d617267f0000007",
+        "type": "function",
+        "z": "6d617267f0000001",
+        "name": "greeting",
+        "func": "msg.payload = \"Hello from Node-RED on \" + env.get(\"NODE_NAME\") + \"\\n\";\nmsg.headers = { \"content-type\": \"text/plain; charset=utf-8\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 200,
+        "wires": [
+            [
+                "6d617267f0000008"
+            ]
+        ]
+    },
+    {
+        "id": "6d617267f0000008",
+        "type": "http response",
+        "z": "6d617267f0000001",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 530,
+        "y": 200,
+        "wires": []
+    }
+]

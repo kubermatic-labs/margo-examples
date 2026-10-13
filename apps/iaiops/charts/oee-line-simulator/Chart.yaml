@@ -1,0 +1,6 @@
+apiVersion: v2
+name: oee-line-simulator
+description: Simulated production line that serves its run state and part counters over Modbus TCP.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

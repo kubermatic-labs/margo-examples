@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iaiops.fullname" . }}
+  labels:
+    {{- include "iaiops.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "iaiops.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: mcp
+      port: {{ int .Values.mcp.port }}
+      targetPort: mcp

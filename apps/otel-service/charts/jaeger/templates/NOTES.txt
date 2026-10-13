@@ -1,0 +1,4 @@
+Open the Jaeger UI:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "jaeger.fullname" . }} 16686:16686
+  open http://localhost:16686

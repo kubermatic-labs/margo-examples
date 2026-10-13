@@ -1,0 +1,6 @@
+apiVersion: v2
+name: otel-service
+description: Online ordering service that reports every order as an OpenTelemetry trace.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

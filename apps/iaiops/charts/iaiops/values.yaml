@@ -1,0 +1,31 @@
+# Set by the Margo parameters, see package/margo.yaml.
+
+# iaiops edition: factory, fab, process, building or water. Selects the image and the MCP tools.
+profile: factory
+
+mcp:
+  port: 8000
+  # Comma-separated CIDRs allowed to call the MCP tools. kubectl port-forward connects from
+  # 127.0.0.1, so the default admits exactly that.
+  allowlist: 127.0.0.1/32
+
+# The Modbus TCP endpoint iaiops reads as "line1". The default is the line-simulator component.
+modbus:
+  host: line-simulator
+  port: 5020
+  unitId: 1
+  # Seconds per part at full speed, for the Performance factor of OEE.
+  idealCycleTimeSeconds: 0.1
+
+image:
+  repository: ghcr.io/industrial-aiops/iaiops
+  # Defaults to <appVersion>-<profile>, the tag scheme of the upstream images.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

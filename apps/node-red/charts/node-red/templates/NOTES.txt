@@ -1,0 +1,12 @@
+Open the editor:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "node-red.fullname" . }} 1880:1880
+  open http://localhost:1880
+{{- if .Values.exampleFlow }}
+
+The example flow answers on http://localhost:1880/hello with the node it runs on.
+{{- end }}
+{{- if .Values.exposeOnDevice }}
+
+The editor is also reachable on port {{ int .Values.devicePort }} of every node, without a login.
+{{- end }}

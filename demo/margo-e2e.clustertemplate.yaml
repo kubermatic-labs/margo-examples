@@ -1,0 +1,79 @@
+# Edge ClusterTemplate margo-e2e of the KKP demo project margo-dev (7dq27dzqsx): the template of
+# the demo guide docs/margo/demo-e2e.md and of the test edge cluster for `make e2e-kkp`, both in
+# margo-management. Based on cluster-setup/00_cluster-template/edge-cluster-sda-min-canal.yaml of
+# the SDA repo. For another KKP or project, change the project-id labels and spec.cloud.dc.
+#
+# Applied on the KKP master as platform admin:
+#
+#   kubectl --kubeconfig kkp-master-admin.kubeconfig apply -f demo/margo-e2e.clustertemplate.yaml
+#
+# Not through the KKP API: KKP API v2.31.1 copies its own feature gates into every cluster it
+# creates and leaks externalCloudProvider=true between requests, which the edge provider rejects.
+# Clusters from template instances are not affected.
+#
+# No CSR approver app such as edge-node-auto-approver: the margo-management operator approves the
+# kubelet-serving CSRs of its EdgeDevices with the checks of the Kubernetes approver, and an app
+# that approves every CSR would bypass them (risk R1 of its concept).
+apiVersion: kubermatic.k8c.io/v1
+kind: ClusterTemplate
+metadata:
+  name: margo-e2e
+  annotations:
+    user: tobias.schneck@kubermatic.com
+  labels:
+    name: margo-e2e
+    project-id: 7dq27dzqsx
+    scope: project
+clusterLabels:
+  project-id: 7dq27dzqsx
+  purpose: margo-management-e2e
+credential: ""
+spec:
+  cloud:
+    dc: edge-eu-de
+    edge: {}
+    providerName: edge
+  clusterNetwork:
+    dnsDomain: cluster.local
+    ipFamily: IPv4
+    konnectivityEnabled: true
+    nodeCidrMaskSizeIPv4: 24
+    nodeLocalDNSCacheEnabled: false
+    pods:
+      cidrBlocks:
+        - 172.25.0.0/16
+    proxyMode: iptables
+    services:
+      cidrBlocks:
+        - 10.240.16.0/20
+    tunnelingAgentIP: 100.64.30.10
+  cniPlugin:
+    type: canal
+    version: v3.31
+  componentsOverride:
+    apiserver:
+      # Reduced node port range for the port mapping of the containerized node, as in the SDA template.
+      nodePortRange: 30000-30100
+  containerRuntime: containerd
+  disableCsiDriver: true
+  enableUserSSHKeyAgent: false
+  exposeStrategy: Tunneling
+  # The edge provider has no cloud-controller-manager.
+  features:
+    externalCloudProvider: false
+  humanReadableName: margo-e2e
+  kubelb:
+    enableGatewayAPI: false
+    enabled: false
+    useLoadBalancerClass: false
+  kubernetesDashboard:
+    enabled: false
+  kyverno:
+    enabled: false
+  mla:
+    loggingEnabled: false
+    monitoringEnabled: false
+  pause: false
+  # Off on purpose: task 4.3 lets the operator enable it through spec.placement.manageAdmissionPlugin.
+  usePodNodeSelectorAdmissionPlugin: false
+  version: 1.35.8

@@ -1,0 +1,20 @@
+# The Service keeps this fixed name, so the otel-service component of the same package reaches it
+# at http://jaeger:4318 whatever the release is called.
+fullnameOverride: jaeger
+
+image:
+  repository: jaegertracing/jaeger
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# In-memory storage: the oldest traces are dropped beyond this number, and all are lost when the
+# pod restarts.
+maxTraces: 10000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 512Mi

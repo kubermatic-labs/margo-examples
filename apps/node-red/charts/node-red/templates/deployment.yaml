@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "node-red.fullname" . }}
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # /data must not be shared by two Node-RED processes.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "node-red.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "node-red.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      {{- if .Values.exampleFlow }}
+      initContainers:
+        - name: example-flow
+          image: {{ include "node-red.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - if [ ! -e "/data/$FLOWS" ]; then cp /seed/flows.json "/data/$FLOWS" && echo "seeded /data/$FLOWS"; fi
+          env:
+            - name: FLOWS
+              value: {{ .Values.flowFile | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: example-flow
+              mountPath: /seed
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      {{- end }}
+      containers:
+        - name: node-red
+          image: {{ include "node-red.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: FLOWS
+              value: {{ .Values.flowFile | quote }}
+            - name: NODE_OPTIONS
+              value: {{ .Values.nodeOptions | quote }}
+            - name: NODE_RED_ENABLE_PROJECTS
+              value: {{ .Values.enableProjects | quote }}
+            - name: NODE_RED_ENABLE_SAFE_MODE
+              value: {{ .Values.safeMode | quote }}
+            # Read by the example flow.
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: http
+              containerPort: 1880
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "node-red.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.exampleFlow }}
+        - name: example-flow
+          configMap:
+            name: {{ include "node-red.fullname" . }}-example-flow
+        {{- end }}

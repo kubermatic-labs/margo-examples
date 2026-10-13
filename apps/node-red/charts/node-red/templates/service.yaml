@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "node-red.fullname" . }}
+  labels:
+    {{- include "node-red.labels" . | nindent 4 }}
+spec:
+  type: {{ ternary "NodePort" "ClusterIP" .Values.exposeOnDevice }}
+  selector:
+    {{- include "node-red.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 1880
+      targetPort: http
+      {{- if .Values.exposeOnDevice }}
+      nodePort: {{ int .Values.devicePort }}
+      {{- end }}

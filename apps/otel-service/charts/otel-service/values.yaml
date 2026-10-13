@@ -1,0 +1,22 @@
+# Set by the Margo parameters, see package/margo.yaml.
+otel:
+  # OTLP over HTTP. The default is the jaeger component of the same package.
+  endpoint: http://jaeger:4318
+  serviceName: online-ordering-service
+  # Jaeger takes traces only. Enable when the endpoint is an OpenTelemetry Collector.
+  exportMetrics: false
+# Seconds between two orders.
+orderInterval: 5
+
+image:
+  repository: quay.io/kubermatic-labs/margo-examples/otel-service
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: node-red
+description: Node-RED, the low-code flow editor, with an example flow that names the device it runs on.
+type: application
+version: 0.1.0
+appVersion: "4.1.4"

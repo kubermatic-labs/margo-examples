@@ -1,0 +1,4 @@
+Connect an MCP client through a port-forward, which the default allowlist admits:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "iaiops.fullname" . }} 8000:{{ int .Values.mcp.port }}
+  claude mcp add --transport http iaiops http://127.0.0.1:8000/mcp

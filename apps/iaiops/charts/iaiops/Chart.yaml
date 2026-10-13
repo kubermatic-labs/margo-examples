@@ -1,0 +1,6 @@
+apiVersion: v2
+name: iaiops
+description: Industrial-AIOps MCP server, reading OT endpoints and offering them as governed MCP tools.
+type: application
+version: 0.1.0
+appVersion: "0.28.0"

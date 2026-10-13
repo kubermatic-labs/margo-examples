@@ -1,0 +1,48 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "oee-line-simulator.fullname" . }}
+  labels:
+    {{- include "oee-line-simulator.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "oee-line-simulator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "oee-line-simulator.selectorLabels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: line
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --port={{ int .Values.port }}
+            - --bind=0.0.0.0
+            - --shift-seconds={{ int .Values.shiftSeconds }}
+          ports:
+            - name: modbus
+              containerPort: {{ int .Values.port }}
+          readinessProbe:
+            tcpSocket:
+              port: modbus
+          livenessProbe:
+            tcpSocket:
+              port: modbus
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,36 @@
+# Set by the Margo parameters, see package/margo.yaml.
+
+timezone: UTC
+# The flow file in /data. Changing it later starts an empty flow; the old file stays.
+flowFile: flows.json
+nodeOptions: --max-old-space-size=256
+enableProjects: false
+safeMode: false
+# Seed files/flows.json as the flow file when /data has none yet.
+exampleFlow: true
+
+# The editor has no login. Expose it on the device's network only where that network is trusted.
+exposeOnDevice: false
+# NodePort on every node of the cluster when exposeOnDevice is true.
+devicePort: 31880
+
+# Without persistence /data is an emptyDir: flows, credentials and installed nodes are lost when
+# the pod is replaced.
+persistence:
+  enabled: false
+  size: 1Gi
+  # Empty selects the cluster's default StorageClass.
+  storageClassName: ""
+
+image:
+  repository: nodered/node-red
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 384Mi

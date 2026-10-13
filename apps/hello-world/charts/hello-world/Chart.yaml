@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hello-world
+description: Web page of the Margo specification's example application "Hello World".
+type: application
+version: 1.0.1
+appVersion: "1.0.1"

@@ -1,0 +1,23 @@
+# Set by the Margo parameter lineSimulator, see package/margo.yaml. When false the chart renders nothing.
+enabled: true
+
+# The Service keeps this fixed name, so the iaiops component of the same package reaches the line
+# at line-simulator:5020 whatever the release is called.
+fullnameOverride: line-simulator
+
+port: 5020
+# Length of one simulated shift, replayed forever.
+shiftSeconds: 300
+
+image:
+  repository: quay.io/kubermatic-labs/margo-examples/oee-line-simulator
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 48Mi
+  limits:
+    memory: 128Mi

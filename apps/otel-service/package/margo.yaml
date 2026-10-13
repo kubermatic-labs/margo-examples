@@ -1,0 +1,111 @@
+apiVersion: v1
+id: com-go-otel-service
+metadata:
+  name: Go OpenTelemetry Service
+  description: A lightweight observability service using OpenTelemetry, with Jaeger on the device to look at its traces.
+  version: 0.1.0
+  catalog:
+    application:
+      icon: ./resources/otel-service.png
+      tagline: Order-processing traces over OTLP, collected and shown by Jaeger on the device.
+      descriptionFile: ./resources/description.md
+      releaseNotes: ./resources/release-notes.md
+      licenseFile: ./resources/license.md
+      site: https://github.com/margo/sandbox/tree/main/poc/tests/artefacts/custom-otel-helm-app
+      tags: ["observability", "telemetry", "monitoring"]
+    organization:
+      - name: Kubermatic
+        site: https://www.kubermatic.com
+deploymentProfiles:
+  - type: helm
+    id: com-go-otel-service-helm
+    description: Jaeger all-in-one with in-memory storage first, then the service that sends its traces to it.
+    components:
+      - name: jaeger
+        properties:
+          repository: oci://quay.io/kubermatic-labs/margo-examples/charts/jaeger
+          revision: 0.1.0
+          wait: true
+          timeout: 5m0s
+      - name: otel-service
+        properties:
+          repository: oci://quay.io/kubermatic-labs/margo-examples/charts/otel-service
+          revision: 0.1.0
+          wait: true
+    deviceConstraints:
+      capacityRequirements:
+        cpu:
+          cores: 0.5
+          architectures: ["amd64", "arm64"]
+        memory: 640Mi
+        storage: 1Gi
+      eligibilityRules:
+        - propertySelector:
+            matchExpressions:
+              - key: /supportedDeploymentTypes
+                operator: In
+                values: ["helm"]
+              - key: /supportedRuntimes
+                operator: In
+                values: ["oci"]
+parameters:
+  otlpEndpoint:
+    value: http://jaeger:4318
+    targets:
+      - pointer: otel.endpoint
+        components: ["otel-service"]
+  serviceName:
+    value: online-ordering-service
+    targets:
+      - pointer: otel.serviceName
+        components: ["otel-service"]
+  exportMetrics:
+    value: false
+    targets:
+      - pointer: otel.exportMetrics
+        components: ["otel-service"]
+  orderInterval:
+    value: 5
+    targets:
+      - pointer: orderInterval
+        components: ["otel-service"]
+configuration:
+  sections:
+    - name: Telemetry
+      settings:
+        - parameter: otlpEndpoint
+          name: OTLP endpoint
+          description: Where the service sends OTLP over HTTP. The default is the package's own Jaeger.
+          schema: httpUrl
+        - parameter: serviceName
+          name: Service name
+          description: The service.name of every trace, as Jaeger lists it.
+          schema: serviceName
+        - parameter: exportMetrics
+          name: Export metrics
+          description: Also send the counter orders_processed. Jaeger takes traces only, so enable this for an OpenTelemetry Collector.
+          schema: flag
+    - name: Workload
+      settings:
+        - parameter: orderInterval
+          name: Order interval
+          description: Seconds between two orders, so between two traces.
+          schema: seconds
+  schema:
+    - name: httpUrl
+      dataType: string
+      allowEmpty: false
+      maxLength: 253
+      regexMatch: ^https?://[^\s/]+(:[0-9]+)?(/.*)?$
+    - name: serviceName
+      dataType: string
+      allowEmpty: false
+      maxLength: 63
+      regexMatch: ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$
+    - name: flag
+      dataType: boolean
+    - name: seconds
+      dataType: integer
+      allowEmpty: false
+      minValue: 1
+      maxValue: 3600

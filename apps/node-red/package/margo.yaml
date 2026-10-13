@@ -1,0 +1,166 @@
+apiVersion: v1
+id: com-kubermatic-examples-node-red
+metadata:
+  name: Node-RED
+  description: >-
+    Low-code programming for event-driven applications: wire devices, APIs and online services
+    together in a browser-based flow editor. This example package runs it as a Helm deployment
+    with an example flow that names the device it runs on.
+  version: "4.1.4"
+  catalog:
+    application:
+      icon: ./resources/node-red.png
+      tagline: The low-code flow editor of the OpenJS Foundation, on the edge device.
+      descriptionFile: ./resources/description.md
+      releaseNotes: ./resources/release-notes.md
+      licenseFile: ./resources/license.md
+      site: https://nodered.org
+      tags: ["low-code", "integration", "iot", "automation"]
+    organization:
+      - name: Kubermatic
+        site: https://www.kubermatic.com
+deploymentProfiles:
+  - type: helm
+    id: com-kubermatic-examples-node-red-helm
+    description: Node-RED as a non-root container. The editor stays inside the cluster unless exposeOnDevice is set.
+    components:
+      - name: node-red
+        properties:
+          repository: oci://quay.io/kubermatic-labs/margo-examples/charts/node-red
+          revision: 0.1.0
+          wait: true
+          timeout: 5m0s
+    deviceConstraints:
+      capacityRequirements:
+        cpu:
+          cores: 0.25
+          architectures: ["amd64", "arm64", "arm"]
+        memory: 384Mi
+        storage: 1Gi
+parameters:
+  timezone:
+    value: UTC
+    targets:
+      - pointer: timezone
+        components: ["node-red"]
+  flowFile:
+    value: flows.json
+    targets:
+      - pointer: flowFile
+        components: ["node-red"]
+  nodeOptions:
+    value: --max-old-space-size=256
+    targets:
+      - pointer: nodeOptions
+        components: ["node-red"]
+  enableProjects:
+    value: false
+    targets:
+      - pointer: enableProjects
+        components: ["node-red"]
+  safeMode:
+    value: false
+    targets:
+      - pointer: safeMode
+        components: ["node-red"]
+  exampleFlow:
+    value: true
+    targets:
+      - pointer: exampleFlow
+        components: ["node-red"]
+  exposeOnDevice:
+    value: false
+    targets:
+      - pointer: exposeOnDevice
+        components: ["node-red"]
+  devicePort:
+    value: 31880
+    targets:
+      - pointer: devicePort
+        components: ["node-red"]
+  persistentStorage:
+    value: false
+    targets:
+      - pointer: persistence.enabled
+        components: ["node-red"]
+  storageSize:
+    value: 1Gi
+    targets:
+      - pointer: persistence.size
+        components: ["node-red"]
+configuration:
+  sections:
+    - name: Node-RED
+      settings:
+        - parameter: timezone
+          name: Time zone
+          description: IANA time zone of the runtime, for example Europe/Berlin.
+          schema: timezone
+        - parameter: flowFile
+          name: Flow file
+          description: The flow file in the data directory. Changing it later starts an empty flow.
+          schema: flowFile
+        - parameter: nodeOptions
+          name: Node.js options
+          description: NODE_OPTIONS of the runtime, for example the heap limit.
+          schema: nodeOptions
+        - parameter: enableProjects
+          name: Enable projects
+          description: Turn on the Projects feature, which keeps flows in a git repository.
+          schema: flag
+        - parameter: safeMode
+          name: Safe mode
+          description: Start without running the flows, to repair a flow that crashes the runtime.
+          schema: flag
+        - parameter: exampleFlow
+          name: Example flow
+          description: Seed the example flow when the data directory has no flow file yet.
+          schema: flag
+    - name: Access
+      settings:
+        - parameter: exposeOnDevice
+          name: Expose on the device
+          description: Open the editor on a port of every node. The editor has no login, so only on a trusted network.
+          schema: flag
+        - parameter: devicePort
+          name: Device port
+          description: The port when exposed, from the Kubernetes NodePort range.
+          schema: nodePort
+    - name: Storage
+      settings:
+        - parameter: persistentStorage
+          name: Persistent storage
+          description: Keep the data directory on a volume of the cluster's default StorageClass. Fixed at the first deployment.
+          immutable: true
+          schema: flag
+        - parameter: storageSize
+          name: Storage size
+          description: Size of that volume. Fixed at the first deployment.
+          immutable: true
+          schema: quantity
+  schema:
+    - name: timezone
+      dataType: string
+      allowEmpty: false
+      maxLength: 64
+      regexMatch: ^[A-Za-z0-9_+/-]+$
+    - name: flowFile
+      dataType: string
+      allowEmpty: false
+      maxLength: 64
+      regexMatch: ^[A-Za-z0-9._-]+\.json$
+    - name: nodeOptions
+      dataType: string
+      allowEmpty: true
+      maxLength: 256
+    - name: flag
+      dataType: boolean
+    - name: nodePort
+      dataType: integer
+      allowEmpty: false
+      minValue: 30000
+      maxValue: 32767
+    - name: quantity
+      dataType: string
+      allowEmpty: false
+      regexMatch: ^[1-9][0-9]*(Mi|Gi)$
